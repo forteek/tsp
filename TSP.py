@@ -2,10 +2,11 @@ from __future__ import annotations
 from math import sqrt
 from random import randrange, choice, uniform
 from typing import Optional
+from time import time
 
 
 class Ant:
-    def __init__(self, problem: Problem, alpha: float = 1.0, beta: float = 3.0):
+    def __init__(self, problem: Problem, alpha: float = 1.0, beta: float = 50.0):
         self.problem = problem
         self.alpha = alpha
         self.beta = beta
@@ -113,7 +114,12 @@ class ProblemFactory:
     @staticmethod
     def random(length: Optional[int] = None) -> Problem:
         length = length or randrange(500)
-        vertices = [ProblemFactory._generate_vertex() for _ in range(length)]
+        vertices = []
+        for _ in range(length):
+            vertex = ProblemFactory._generate_vertex()
+            while vertex in vertices:
+                vertex = ProblemFactory._generate_vertex()
+            vertices.append(vertex)
 
         return Problem(length, vertices)
 
@@ -138,8 +144,8 @@ class ProblemFactory:
 
     @staticmethod
     def _generate_vertex(x: Optional[float] = None, y: Optional[float] = None) -> Vertex:
-        x = x or randrange(1000)
-        y = y or randrange(1000)
+        x = x or randrange(100)
+        y = y or randrange(100)
 
         return Vertex(x, y)
 
@@ -147,8 +153,9 @@ class ProblemFactory:
 class ProblemSolver:
     @staticmethod
     def solve_antily(problem: Problem, colony_size: int = 10, steps: int = 100, rho: float = 0.1, pheromone_deposit: float = 1.0):
+        start_time = time()
+
         ants = [Ant(problem) for _ in range(colony_size)]
-        best_tour = None
         best_distance = None
 
         for _ in range(steps):
@@ -156,7 +163,6 @@ class ProblemSolver:
                 ProblemSolver._add_pheromone(pheromone_deposit, ant.find_tour(), ant.distance)
 
                 if best_distance is None or ant.distance < best_distance:
-                    best_tour = ant.tour
                     best_distance = ant.distance
 
             for vertex in problem.vertices:
@@ -167,8 +173,8 @@ class ProblemSolver:
                     edge = vertex.get_route(target_vertex)
                     edge.pheromone *= (1.0 - rho)
 
-        print([f'{vertex.x} {vertex.y}' for vertex in best_tour])
-        print(best_distance)
+        total_time = time() - start_time
+        print(f'ACO algorithm came up with a route of {best_distance:.2f} in {total_time:.2f}s.')
 
     @staticmethod
     def _add_pheromone(pheromone_deposit: float, tour: list[Vertex], distance: float):
@@ -180,6 +186,8 @@ class ProblemSolver:
 
     @staticmethod
     def solve_greedily(problem: Problem):
+        start_time = time()
+
         counter = 1
         visited_vertices = []
         route = {0: problem.vertices[0]}
@@ -203,8 +211,6 @@ class ProblemSolver:
             vertex = route[counter]
             counter += 1
 
-        print([f'{vertex.x} {vertex.y}' for vertex in route.values()])
-
         sum = 0
         first = route[len(route) - 1]
         current = route.popitem()[1]
@@ -218,4 +224,5 @@ class ProblemSolver:
                 sum += first.get_route(next).distance
                 break
 
-        print(str(sum))
+        total_time = time() - start_time
+        print(f'Greedy algorithm came up with a route of {sum:.2f} in {total_time:.2f}s.')
