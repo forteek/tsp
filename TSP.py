@@ -169,7 +169,7 @@ class ProblemSolver:
 
         print([f'{vertex.x} {vertex.y}' for vertex in best_tour])
         print(best_distance)
-✨
+
     @staticmethod
     def _add_pheromone(pheromone_deposit: float, tour: list[Vertex], distance: float):
         pheromone_to_add = pheromone_deposit / distance
